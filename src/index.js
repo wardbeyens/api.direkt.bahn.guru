@@ -11,7 +11,7 @@ import robots from 'express-robots-txt'
 import reachableFrom from './reachableFrom.js'
 import { stationsByQuery, stationById } from './stations.js'
 
-const port = process.env.PORT
+const port = process.env.PORT | 3000
 if (!port) throw new Error('please provide a PORT environment variable')
 
 const api = express()
@@ -27,7 +27,9 @@ api.get('/health', (req, res) => res.end())
 // todo: use a global cache (redis?) here
 const cache = apicache.options({
 	appendKey: () => 'v6',
-	redisClient: process.env.REDIS_URI ? redis.createClient(process.env.REDIS_URI) : undefined,
+	redisClient: process.env.REDIS_URI
+		? redis.createClient(process.env.REDIS_URI)
+		: undefined,
 	statusCodes: {
 		include: [200],
 	},
@@ -35,11 +37,11 @@ const cache = apicache.options({
 
 api.get('/stations', cache('24 hours'), stationsByQuery)
 api.get('/stations/:id', cache('24 hours'), stationById)
-api.get('/:id', cache('24 hours'), reachableFrom) // todo: prefix this path, since requests would fail if any id started with /stations
+api.get('/id/:id', cache('24 hours'), reachableFrom)
 
 api.disable('x-powered-by')
 
-server.listen(port, error => {
+server.listen(port, (error) => {
 	if (error) {
 		console.error(error)
 		process.exit(1)

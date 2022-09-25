@@ -9,4 +9,7 @@ yarn.lock
 shrinkwrap.yaml
 dist
 
+#env
+.env
+
 /src/stations.json
