@@ -1,6 +1,7 @@
 # general
 .DS_Store
 *.log
+*.txt
 
 # node-specific
 node_modules
