@@ -37,7 +37,7 @@ const cache = apicache.options({
 
 api.get('/stations', cache('24 hours'), stationsByQuery)
 api.get('/stations/:id', cache('24 hours'), stationById)
-api.get('/id/:id', cache('24 hours'), reachableFrom)
+api.get('/:id', cache('24 hours'), reachableFrom)
 
 api.disable('x-powered-by')
 
