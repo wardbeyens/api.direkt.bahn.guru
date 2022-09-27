@@ -7,7 +7,7 @@ import moment from 'moment-timezone'
 import { boolean } from 'boolean'
 import l from 'lodash'
 
-const hafas = createHafas('RAILWAYCONNECTIONS')
+const hafas = createHafas('trainconnections')
 
 const isTrainDeparture = (departure) =>
 	l.get(departure, 'line.mode') === 'train' &&
@@ -63,7 +63,9 @@ const reachableForDay = async (date, stationId, localTrainsOnly) => {
 			)
 			return passedStopovers.map((s) => {
 				let duration = (+new Date(s.arrival) - +new Date(when)) / (1000 * 60)
-				if (duration <= 0 || duration / 60 > maximumDurationInHours) { duration = null }
+				if (duration <= 0 || duration / 60 > maximumDurationInHours) {
+					duration = null
+				}
 
 				const productFilter = dbUrlFilterForProduct(departure.line.product)
 				const day = moment(departure.when)
