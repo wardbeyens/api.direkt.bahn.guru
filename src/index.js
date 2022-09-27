@@ -9,7 +9,7 @@ import redis from 'redis'
 import robots from 'express-robots-txt'
 
 import reachableFrom from './reachableFrom.js'
-import { stationsByQuery, stationById } from './stations.js'
+import { stationsByQuery, stationById, stationList } from './stations.js'
 
 const port = process.env.PORT | 3000
 if (!port) throw new Error('please provide a PORT environment variable')
@@ -35,6 +35,7 @@ const cache = apicache.options({
 	},
 }).middleware
 
+api.get('/', cache('24 hour'), stationList)
 api.get('/stations', cache('24 hours'), stationsByQuery)
 api.get('/stations/:id', cache('24 hours'), stationById)
 api.get('/:id', cache('24 hours'), reachableFrom)

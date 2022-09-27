@@ -6,8 +6,14 @@ import fetch from 'node-fetch'
 import { dirname, resolve } from 'path'
 import uicCodes from 'uic-codes'
 import { fileURLToPath, URL } from 'url'
+import * as https from 'https'
 
-const stationsMap = new Map(Object.entries(JSON.parse(fs.readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), './stations.json')))))
+const agent = new https.Agent({
+	rejectUnauthorized: false,
+})
+
+const stations = JSON.parse(fs.readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), './stations.json')))
+const stationsMap = new Map(Object.entries(stations))
 
 const fetchStations = async query => {
 	const urlA = new URL('https://v5.db.transport.rest/locations?poi=false&addresses=false')
@@ -15,9 +21,9 @@ const fetchStations = async query => {
 	urlA.searchParams.append('query', query)
 	urlB.searchParams.append('query', query)
 
-	return Promise.race([
-		fetch(urlA),
-		fetch(urlB),
+	return Promise.any([
+		fetch(urlA, { agent }),
+		fetch(urlB, { agent }),
 	]).then(res => res.json())
 }
 
@@ -81,6 +87,15 @@ export const stationsByQuery = async (req, res) => {
 			.map(createStation)
 			.filter(stationHasLocation)
 			.map(fixStationName)
+		return res.json(stations)
+	} catch (error) {
+		console.error(error)
+		return res.status(500).json({ error: true, message: 'internal error' })
+	}
+}
+
+export const stationList = async (req, res) => {
+	try {
 		return res.json(stations)
 	} catch (error) {
 		console.error(error)
