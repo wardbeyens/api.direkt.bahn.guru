@@ -1,8 +1,8 @@
 # install dependencies
 FROM node:gallium-alpine
-RUN npm i -g pnpm
+WORKDIR /usr/src/app
 
-WORKDIR /app-src
+RUN npm i -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
@@ -10,7 +10,10 @@ RUN pnpm install
 COPY src ./src
 RUN pnpm run build-stations
 
-USER node
-
 ENV PORT=3000
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=12s --timeout=12s --start-period=30s CMD node healthcheck.js
+
 CMD ["pnpm", "run", "start"]
