@@ -14,12 +14,9 @@ services:
     container_name: trainconnections-api
     image: wardbeyens/api-trainconnections:latest
     environment:
-      # - REDIS_URI="redis://192.168.0.100:33001/0"
-      # - REDIS_URI=redis://192.168.0.100:33001
-      # - REDIS_URI=redis://host.docker.internal:33001
       - REDIS_URI=redis://trainconnections-api-redis-cache
     ports:
-      - "33000:3000"
+      - "3000:3000"
     restart: unless-stopped
     depends_on:
       - cache
