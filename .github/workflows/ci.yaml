@@ -49,8 +49,6 @@ jobs:
         with:
           context: .
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           tags: |
             ghcr.io/${{github.repository}}:latest,
             ghcr.io/${{github.repository}}:v1_${{steps.hash.outputs.HASH}}_${{steps.datetime.outputs.DATE_TIME}},
