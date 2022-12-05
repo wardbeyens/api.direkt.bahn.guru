@@ -8,11 +8,11 @@ services:
     #   - '33001:6379'
     command: redis-server --loglevel warning
     # volumes:
-    #   - ...:/data
+    #   - ./data:data
 
   trainconnections-api:
     container_name: trainconnections-api
-    image: wardbeyens/api-trainconnections:latest
+    image: wardbeyens/trainconnections-api:latest
     environment:
       - REDIS_URI=redis://trainconnections-api-redis-cache
     ports:
