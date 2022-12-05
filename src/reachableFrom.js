@@ -7,7 +7,7 @@ import moment from 'moment-timezone'
 import { boolean } from 'boolean'
 import l from 'lodash'
 
-const hafas = createHafas('trainconnections')
+const hafas = createHafas('trainconnections-api')
 
 const isTrainDeparture = (departure) =>
 	l.get(departure, 'line.mode') === 'train' &&
@@ -23,7 +23,7 @@ const dbUrlFilterForProduct = (product) => {
 // several weeks. we filter these out using some practical upper limit
 const maximumDurationInHours = 210 // see also: https://en.wikipedia.org/wiki/Longest_train_services#Top_50_train_services,_by_distance
 
-const reachableForDay = async (date, stationId, localTrainsOnly) => {
+const reachableForDay = async (date, stationId, localTrainsOnly = false) => {
 	const departures = await hafas.departures(stationId, {
 		when: date,
 		duration: 24 * 60, // 24h
@@ -53,21 +53,27 @@ const reachableForDay = async (date, stationId, localTrainsOnly) => {
 				// probably incomplete.
 				if (departure.line.operator?.name === 'FlixTrain') return []
 				if (departure.line.operator?.name === 'Snälltåget') return []
-				if (departure.line.operator?.name === 'Urlaubs-Express') return []
+				if (departure.line.operator?.name === 'Urlaubs-Express') {
+					return []
+				}
 			}
 
 			const { when, nextStopovers = [] } = departure
 			const passedStopovers = l.takeRightWhile(
 				nextStopovers || [],
-				(x) => ![stationId, undefined, null].includes(l.get(x, 'stop.id')),
+				(x) =>
+					![stationId, undefined, null].includes(l.get(x, 'stop.id')),
 			)
 			return passedStopovers.map((s) => {
-				let duration = (+new Date(s.arrival) - +new Date(when)) / (1000 * 60)
+				let duration =
+					(+new Date(s.arrival) - +new Date(when)) / (1000 * 60)
 				if (duration <= 0 || duration / 60 > maximumDurationInHours) {
 					duration = null
 				}
 
-				const productFilter = dbUrlFilterForProduct(departure.line.product)
+				const productFilter = dbUrlFilterForProduct(
+					departure.line.product,
+				)
 				const day = moment(departure.when)
 					.tz('Europe/Berlin')
 					.format('DD.MM.YY') // todo: this might be wrong, since the first stop of the train might be on the previous day
@@ -83,6 +89,7 @@ const reachableForDay = async (date, stationId, localTrainsOnly) => {
 			})
 		})
 		.filter((x) => l.isNumber(x.duration))
+
 	return reachable
 }
 
@@ -91,12 +98,15 @@ export default async (req, res, next) => {
 	if (!id || !isLocationCode(id)) {
 		return res
 			.status(400)
-			.json({ error: true, message: 'id must be a station code' })
+			.json({ error: true, message: 'ID must be a station code' })
 	}
-	const localTrainsOnly = boolean(req.query.localTrainsOnly)
+	const localTrainsOnly = boolean(req.query.localTrainsOnly) || false
 
 	try {
-		const baseDate = moment.tz('Europe/Berlin').add(7, 'days').startOf('day')
+		const baseDate = moment
+			.tz('Europe/Berlin')
+			.add(7, 'days')
+			.startOf('day')
 		const daysToAdd = l.range(7)
 		const dates = daysToAdd.map((a) =>
 			moment(baseDate).add(a, 'days').toDate(),
